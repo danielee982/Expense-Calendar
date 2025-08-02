@@ -13,19 +13,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ExpenseType {
+  IN
+  OUT
+}
+
+enum CurrencyType {
+  KRW
+  USD
+}
+
 model User {
   id            Int           @id @default(autoincrement())
   email         String        @unique
   name          String
   createdAt     DateTime      @default(now())
   categories    Category[]
+  expenses      Expense[]
+  currency      CurrencyType  @default(USD)
 }
 
 model Category {
   id            Int           @id @default(autoincrement())
-  userId        Int
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        Int?
+  isDefault     Boolean       @default(false)
+  user          User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
   name          String
   color         String
+  expenses      Expense[]
+  createdAt     DateTime      @default(now())
+  @@unique([userId, name])
+}
+
+model Expense {
+  id            Int           @id @default(autoincrement())
+  userId        Int
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId    Int           
+  category      Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  amount        Decimal       @db.Decimal(10, 2)
+  type          ExpenseType
+  date          DateTime
+  note          String?       @db.VarChar(100)
   createdAt     DateTime      @default(now())
 }
